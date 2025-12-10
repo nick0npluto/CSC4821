@@ -56,7 +56,7 @@ export class RunnerPlayer {
 
         this.sprite.setCollideWorldBounds(false);
         this.sprite.setBounce(0);
-        this.sprite.setGravityY(0); // Using scene gravity instead
+        this.sprite.setGravityY(8); // Using scene gravity instead
 
         // Set body size after scaling
         if (this.sprite.body) {
