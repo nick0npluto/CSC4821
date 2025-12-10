@@ -27,8 +27,6 @@ export class Game extends Scene
     private readonly LASER_SPAWN_CHANCE = 0.3; // 60% chance to spawn a laser each interval
 
     // UI
-    private distanceText!: Phaser.GameObjects.Text;
-    private helpText!: Phaser.GameObjects.Text;
     private scoreText!: Phaser.GameObjects.Text;
     private score: number = 0;
     private lastDistanceScore: number = 0; // Track last distance-based score to prevent overwriting deductions
@@ -147,32 +145,15 @@ export class Game extends Scene
     }
 
     private setupUI(): void {
-        this.distanceText = this.add.text(16, 16, 'Distance: 0m', {
-            fontFamily: 'Arial',
-            fontSize: '32px',
-            color: '#ffffff'
-        }).setDepth(1000);
-
-        // Score counter in top right
-        this.scoreText = this.add.text(this.scale.width - 16, 16, 'Score: 0', {
+        // Score counter in top left
+        this.scoreText = this.add.text(16, 16, 'Score: 0', {
             fontFamily: 'Arial',
             fontSize: '32px',
             color: '#00ff00',
             stroke: '#000000',
             strokeThickness: 4
-        }).setOrigin(1, 0).setDepth(1000);
+        }).setOrigin(0, 0).setDepth(1000);
 
-        this.helpText = this.add.text(960, 100, 'FIREWALL - Endless Runner\n\nSPACE/W/↑ - Jump\n\nWatch for YELLOW warnings!\nJump over lasers!', {
-            fontFamily: 'Arial',
-            fontSize: '24px',
-            color: '#ffffff',
-            align: 'center'
-        }).setOrigin(0.5).setDepth(1000);
-
-        // Hide help text after 5 seconds
-        this.time.delayedCall(5000, () => {
-            this.helpText.setAlpha(0);
-        });
     }
 
     update(_time: number, delta: number): void
@@ -192,8 +173,7 @@ export class Game extends Scene
 
         // Update distance traveled
         this.distance += (this.scrollSpeed * delta) / 1000;
-        this.distanceText.setText(`Distance: ${Math.floor(this.distance)}m`);
-        
+
         // Update score (increases at 0.25x the rate of distance)
         // Score increases with distance, but laser hits deduct from it
         const distanceScore = Math.floor(this.distance);
@@ -365,15 +345,15 @@ export class Game extends Scene
         this.flashOverlay.setAlpha(0.3); // Light red flash (30% opacity)
         this.flashTimer = this.FLASH_DURATION;
     }
-    
+
     private updateFlashEffect(delta: number): void {
         if (this.flashTimer > 0) {
             this.flashTimer -= delta;
-            
+
             // Fade out the flash
             const alpha = Math.max(0, (this.flashTimer / this.FLASH_DURATION) * 0.3);
             this.flashOverlay.setAlpha(alpha);
-            
+
             // Hide when timer expires
             if (this.flashTimer <= 0) {
                 this.flashOverlay.setVisible(false);
@@ -381,7 +361,19 @@ export class Game extends Scene
             }
         }
     }
-    
+
+    public deductScore(points: number): void {
+        // Deduct points from score (called when skipping challenges, etc.)
+        const oldScore = this.score;
+        this.score = Math.max(0, this.score - points); // Don't go below 0
+        this.scoreText.setText(`Score: ${Math.floor(this.score)}`);
+
+        console.log(`Score deducted: ${oldScore} - ${points} = ${this.score}`);
+
+        // Flash screen red to indicate penalty
+        this.flashScreen();
+    }
+
     private handlePlatformCollision(
         playerSprite: any,
         platformSprite: any
